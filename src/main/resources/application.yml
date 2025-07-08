@@ -1,0 +1,23 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/ai_pictures
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+knife4j:
+  enable: true
+  openapi:
+    title: ai-pictures-lib官方文档
+    email: 2499202708@qq.com
+    concat: 陈卓杰
+    license-url: https://stackoverflow.com/
+    terms-of-service-url: https://stackoverflow.com/
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.web.aipictureslib.controller
