@@ -4,7 +4,7 @@ server:
     context-path: /api
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/ai_pictures
+    url: jdbc:mysql://localhost:3306/ai_pictures_lib
     username: root
     password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -21,3 +21,6 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.web.aipictureslib.controller
+mybatis-plus:
+  configuration:
+    mapUnderscoreToCamelCase: false
