@@ -1,0 +1,7 @@
+cos:
+  client:
+    host: https://chen-picture-1365134870.cos.ap-guangzhou.myqcloud.com
+    secretId: AKIDOub5Ldt1xlQ0UqGuU1PaZNxNaZO0OcdT
+    secretKey: kHcjcImAVjqpndLrAG9qwsgIhv03DIAp
+    region: ap-guangzhou
+    bucket: chen-picture-1365134870
