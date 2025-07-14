@@ -11,6 +11,4 @@ public class DeleteRequest implements Serializable {
      * id
      */
     private Long id;
-
-
 }
