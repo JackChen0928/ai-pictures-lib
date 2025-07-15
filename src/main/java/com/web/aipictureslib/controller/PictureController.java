@@ -13,12 +13,10 @@ import com.web.aipictureslib.exception.ThrowUtils;
 import com.web.aipictureslib.manager.FileManager;
 import com.web.aipictureslib.model.VO.PictureVO;
 import com.web.aipictureslib.model.dto.file.UploadPictureResult;
-import com.web.aipictureslib.model.dto.picture.PictureEditRequest;
-import com.web.aipictureslib.model.dto.picture.PictureQueryRequest;
-import com.web.aipictureslib.model.dto.picture.PictureUpdateRequest;
-import com.web.aipictureslib.model.dto.picture.PictureUploadRequest;
+import com.web.aipictureslib.model.dto.picture.*;
 import com.web.aipictureslib.model.entity.Picture;
 import com.web.aipictureslib.model.entity.User;
+import com.web.aipictureslib.model.enums.PictureReviewStatusEnum;
 import com.web.aipictureslib.service.PictureService;
 import com.web.aipictureslib.service.UserService;
 import org.apache.coyote.Request;
@@ -54,11 +52,26 @@ public class PictureController {
      * @return
      */
     @PostMapping("/upload")
-    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<PictureVO> uploadPicture(@RequestPart("file") MultipartFile multipartFile, PictureUploadRequest pictureUploadRequest) {
         ThrowUtils.throwIf(multipartFile == null, ErrorCode.PARAM_ERROR);
         User user = userService.getLoginUser(request);
         PictureVO pictureVO = pictureService.uploadPicture(multipartFile, pictureUploadRequest,user);
+        return ResultUtils.success(pictureVO);
+    }
+
+    /**
+     * 上传图片（url）
+     *
+     * @param pictureUploadRequest
+     * @param
+     * @return
+     */
+    @PostMapping("/upload/url")
+    public BaseResponse<PictureVO> uploadPictureByurl(@RequestBody PictureUploadRequest pictureUploadRequest) {
+        ThrowUtils.throwIf(pictureUploadRequest == null, ErrorCode.PARAM_ERROR);
+        User user = userService.getLoginUser(request);
+        String url = pictureUploadRequest.getFileUrl();
+        PictureVO pictureVO = pictureService.uploadPicture(url, pictureUploadRequest,user);
         return ResultUtils.success(pictureVO);
     }
 
@@ -101,7 +114,10 @@ public class PictureController {
        //判断是否存在该图片
        Picture oldPicture = pictureService.getById(id);
        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
-       //存在该照片，把之前存起来的新的数据存进去数据库
+       //填充审核参数
+       User loginUser = userService.getLoginUser(request);
+       pictureService.fillReviewParams(picture, loginUser);
+       //存在该照片，把之前存起来的新的数据存进去数据库（操作数据库）
        boolean result = pictureService.updateById(picture);
        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
        return ResultUtils.success(true);
@@ -128,6 +144,8 @@ public class PictureController {
         if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
             throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
         }
+        //填充审核参数
+        pictureService.fillReviewParams(picture, loginUser);
         //存在该照片，把之前存起来的新的数据存进去数据库
         boolean result = pictureService.updateById(picture);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -140,9 +158,9 @@ public class PictureController {
      * @param id
      * @return
      */
-    @PostMapping("/get")
+    @GetMapping("/get")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-    public BaseResponse<Picture> getPicture(Long id) {
+    public BaseResponse<Picture> getPictureById(Long id) {
        ThrowUtils.throwIf(id <= 0, ErrorCode.PARAM_ERROR);
        Picture picture = pictureService.getById(id);
        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
@@ -153,7 +171,7 @@ public class PictureController {
      * @param id
      * @return
      */
-    @PostMapping("/get/vo")
+    @GetMapping("/get/vo")
     public BaseResponse<PictureVO> getPictureVOById(Long id) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAM_ERROR);
         Picture picture = pictureService.getById(id);
@@ -187,11 +205,23 @@ public class PictureController {
         long size = pictureQueryRequest.getPageSize();
         //限制爬虫
         ThrowUtils.throwIf(size > 20, ErrorCode.PARAM_ERROR);
+        //普通用户默认只能查看已通过审核的照片
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
         //先查询数据库获得不脱敏的数据页
-        Page<Picture> picturePage = pictureService.page(new Page<>(current, size), pictureService.getQueryWrapper(pictureQueryRequest));
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),pictureService.getQueryWrapper(pictureQueryRequest));
         //通过不脱敏的数据页，再获得脱敏的数据页
         Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
         return ResultUtils.success(pictureVOPage);
+    }
+
+
+    @PostMapping("/review")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> doPictureReview(@RequestBody PictureReviewRequest pictureReviewRequest) {
+        ThrowUtils.throwIf(pictureReviewRequest == null, ErrorCode.PARAM_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        pictureService.doPictureReview(pictureReviewRequest,loginUser);
+        return ResultUtils.success(true);
     }
 
 //    /**
