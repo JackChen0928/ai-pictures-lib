@@ -1,7 +1,11 @@
 package com.web.aipictureslib.controller;
 
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.web.aipictureslib.annotation.AuthCheck;
 import com.web.aipictureslib.common.BaseResponse;
 import com.web.aipictureslib.common.DeleteRequest;
@@ -19,9 +23,13 @@ import com.web.aipictureslib.model.entity.User;
 import com.web.aipictureslib.model.enums.PictureReviewStatusEnum;
 import com.web.aipictureslib.service.PictureService;
 import com.web.aipictureslib.service.UserService;
+import org.apache.commons.codec.cli.Digest;
 import org.apache.coyote.Request;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,6 +37,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static com.web.aipictureslib.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -43,6 +52,17 @@ public class PictureController {
     private UserService userService;
     @Autowired
     private HttpServletRequest request;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
+    //构造本地缓存
+    private final Cache<String,String> LOCAL_CACHE =
+            Caffeine.newBuilder()
+                    .maximumSize(10000L)
+                    .expireAfterWrite(10, TimeUnit.MINUTES)
+                    .build();
+
+
     /**
      * 上传图片
      *
@@ -214,6 +234,147 @@ public class PictureController {
         return ResultUtils.success(pictureVOPage);
     }
 
+//    @PostMapping("/list/page/vo/cache")
+//    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest) {
+//        long current = pictureQueryRequest.getCurrent();
+//        long size = pictureQueryRequest.getPageSize();
+//        //限制爬虫
+//        ThrowUtils.throwIf(size > 20, ErrorCode.PARAM_ERROR);
+//        //普通用户默认只能查看已通过审核的照片
+//        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+//
+//        //1.查询缓存(先构造key，再通过key查询是否有缓存)
+//        //构造key
+//        String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+//        String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
+//        String redisKey = String.format("ai_pictures_lib:listPictureVOByPage:%s", hashKey);
+//
+//        //查询redis缓存
+//        //拿到操作对象
+//        ValueOperations<String, String> valueOps = stringRedisTemplate.opsForValue();
+//        //通过操作对象拿到数据
+//        String cachedValue = valueOps.get(redisKey);
+//        //若缓存有，直接返回
+//        if (StringUtils.isNotBlank(cachedValue)) {
+//            //从缓存中获得数据(json形式，需要转成java对象)
+//            Page<PictureVO> pictureVOPage = JSONUtil.toBean(cachedValue, Page.class);
+//            return ResultUtils.success(pictureVOPage);
+//        }
+//
+//        //2.若缓存没有，查询数据库
+//        //查询数据库获得不脱敏的数据页
+//        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),pictureService.getQueryWrapper(pictureQueryRequest));
+//        //通过不脱敏的数据页，再获得脱敏的数据页
+//        Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
+//
+//
+//        //3.把数据库查出来的，写入缓存
+//        //将数据页转成json字符串
+//        String cacheValue = JSONUtil.toJsonStr(pictureVOPage);
+//        //5-10分钟随机过期，防止缓存雪崩
+//        int expireSeconds = RandomUtil.randomInt(5 * 60, 10 * 60);
+//        valueOps.set(redisKey, cacheValue, expireSeconds, TimeUnit.SECONDS);
+//
+//        return ResultUtils.success(pictureVOPage);
+//    }
+
+
+//    @PostMapping("/list/page/vo/cache")
+//    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest) {
+//        long current = pictureQueryRequest.getCurrent();
+//        long size = pictureQueryRequest.getPageSize();
+//        //限制爬虫
+//        ThrowUtils.throwIf(size > 20, ErrorCode.PARAM_ERROR);
+//        //普通用户默认只能查看已通过审核的照片
+//        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+//
+//        //1.查询缓存(先构造key，再通过key查询是否有缓存)
+//        //构造key
+//        String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+//        String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
+//        String cacheKey = String.format("ai_pictures_lib:listPictureVOByPage:%s", hashKey);
+//
+//        //查询本地缓存
+//        //拿到操作对象
+//        String cachedValue = LOCAL_CACHE.getIfPresent(cacheKey);
+//        //若缓存有，直接返回
+//        if (cachedValue != null) {
+//            //从缓存中获得数据(json形式，需要转成java对象)
+//            Page<PictureVO> pictureVOPage = JSONUtil.toBean(cachedValue, Page.class);
+//            return ResultUtils.success(pictureVOPage);
+//        }
+//
+//    //2.若缓存没有，查询数据库
+//    //查询数据库获得不脱敏的数据页
+//    Page<Picture> picturePage = pictureService.page(new Page<>(current, size),pictureService.getQueryWrapper(pictureQueryRequest));
+//    //通过不脱敏的数据页，再获得脱敏的数据页
+//    Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
+//
+//
+//    //3.把数据库查出来的，写入本地缓存
+//    //将数据页转成json字符串
+//    String cacheValue = JSONUtil.toJsonStr(pictureVOPage);
+//    LOCAL_CACHE.put(cacheKey, cacheValue);
+//
+//
+//    return ResultUtils.success(pictureVOPage);
+//    }
+    @PostMapping("/list/page/vo/cache")
+    public BaseResponse<Page<PictureVO>> listPictureVOByPageWithCache(@RequestBody PictureQueryRequest pictureQueryRequest) {
+        long current = pictureQueryRequest.getCurrent();
+        long size = pictureQueryRequest.getPageSize();
+        //限制爬虫
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAM_ERROR);
+        //普通用户默认只能查看已通过审核的照片
+        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+
+        //1.查询缓存(先构造key，再通过key查询是否有缓存)
+        //构造key
+        String queryCondition = JSONUtil.toJsonStr(pictureQueryRequest);
+        String hashKey = DigestUtils.md5DigestAsHex(queryCondition.getBytes());
+        String cacheKey = String.format("ai_pictures_lib:listPictureVOByPage:%s", hashKey);
+
+        //1.先查询本地缓存
+        String cachedValue = LOCAL_CACHE.getIfPresent(cacheKey);
+        //若本地缓存有，直接返回
+        if (cachedValue != null) {
+            //从本地缓存中获得数据(json形式，需要转成java对象)
+            Page<PictureVO> pictureVOPage = JSONUtil.toBean(cachedValue, Page.class);
+            //返回本地缓存数据
+            return ResultUtils.success(pictureVOPage);
+        }
+        //2.若本地缓存没有，查询Redis缓存
+        //拿到操作对象
+        ValueOperations<String, String> valueOps = stringRedisTemplate.opsForValue();
+        //通过操作对象拿到数据
+        cachedValue = valueOps.get(cacheKey);
+        //若redis缓存有，直接返回
+        if (StringUtils.isNotBlank(cachedValue)) {
+            //写入本地缓存
+            LOCAL_CACHE.put(cacheKey, cachedValue);
+            //从redis缓存中获得数据(json形式，需要转成java对象)
+            Page<PictureVO> pictureVOPage = JSONUtil.toBean(cachedValue, Page.class);
+            //返回redis缓存数据
+            return ResultUtils.success(pictureVOPage);
+        }
+        //3.若Redis缓存没有，查询数据库
+        //查询数据库获得不脱敏的数据页
+        Page<Picture> picturePage = pictureService.page(new Page<>(current, size),
+                pictureService.getQueryWrapper(pictureQueryRequest));
+        //通过不脱敏的数据页，再获得脱敏的数据页
+        Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
+
+
+        //4.把数据库查出来的，写入本地缓存以及redis缓存
+        //将数据页转成json字符串
+        String cacheValue = JSONUtil.toJsonStr(pictureVOPage);
+        //更新本地缓存
+        LOCAL_CACHE.put(cacheKey, cacheValue);
+        //更新redis缓存
+        valueOps.set(cacheKey, cacheValue, 5, TimeUnit.MINUTES);
+
+        return ResultUtils.success(pictureVOPage);
+    }
 
     @PostMapping("/review")
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
