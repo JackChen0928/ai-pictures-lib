@@ -2,6 +2,7 @@ package com.web.aipictureslib.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.web.aipictureslib.api.aliyunai.model.CreateOutPaintingTaskResponse;
 import com.web.aipictureslib.model.VO.PictureVO;
 import com.web.aipictureslib.model.dto.picture.*;
 import com.web.aipictureslib.model.entity.Picture;
@@ -90,4 +91,6 @@ public interface PictureService extends IService<Picture> {
     void deletePicture(long pictureId, User loginUser);
 
     void editPicture(PictureEditRequest pictureEditRequest);
+
+    CreateOutPaintingTaskResponse createPictureOutPaintingTask(CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest, User loginUser);
 }

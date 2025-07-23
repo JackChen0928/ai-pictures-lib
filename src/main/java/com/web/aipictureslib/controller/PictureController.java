@@ -1,12 +1,18 @@
 package com.web.aipictureslib.controller;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.web.aipictureslib.annotation.AuthCheck;
+import com.web.aipictureslib.api.aliyunai.AliYunAIApi;
+import com.web.aipictureslib.api.aliyunai.model.CreateOutPaintingTaskResponse;
+import com.web.aipictureslib.api.aliyunai.model.GetOutPaintingTaskResponse;
+import com.web.aipictureslib.api.imagesearch.ImageSearchApiFacade;
+import com.web.aipictureslib.api.imagesearch.model.ImageSearchResult;
 import com.web.aipictureslib.common.BaseResponse;
 import com.web.aipictureslib.common.DeleteRequest;
 import com.web.aipictureslib.common.ResultUtils;
@@ -40,6 +46,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.web.aipictureslib.constant.UserConstant.USER_LOGIN_STATE;
@@ -59,6 +66,8 @@ public class PictureController {
     private StringRedisTemplate stringRedisTemplate;
     @Resource
     private SpaceService spaceService;
+    @Resource
+    private AliYunAIApi aliYunAIApi;
 
     //构造本地缓存
     private final Cache<String,String> LOCAL_CACHE =
@@ -390,6 +399,41 @@ public class PictureController {
         int count = pictureService.uploadPictureByBatch(pictureUploadByBatchRequest, loginUser);
         return ResultUtils.success(count);
     }
+    /**
+     * 以图搜图
+     */
+    @PostMapping("/search/picture")
+    public BaseResponse<List<ImageSearchResult>> searchPictureByPicture(@RequestBody SearchPictureByPictureRequest searchPictureByPictureRequest) {
+        ThrowUtils.throwIf(searchPictureByPictureRequest == null, ErrorCode.PARAM_ERROR);
+        Long pictureId = searchPictureByPictureRequest.getPictureId();
+        ThrowUtils.throwIf(pictureId == null || pictureId <= 0, ErrorCode.PARAM_ERROR);
+        Picture oldPicture = pictureService.getById(pictureId);
+        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
+        List<ImageSearchResult> resultList = ImageSearchApiFacade.searchImage(oldPicture.getUrl());
+        return ResultUtils.success(resultList);
+    }
+
+    /**
+     * 创建图片扩图任务
+     */
+    @PostMapping("/out_painting/create_task")
+    public BaseResponse<CreateOutPaintingTaskResponse> createPictureOutPaintingTask(@RequestBody CreatePictureOutPaintingTaskRequest createPictureOutPaintingTaskRequest) {
+        ThrowUtils.throwIf(createPictureOutPaintingTaskRequest == null || createPictureOutPaintingTaskRequest.getPictureId() == null, ErrorCode.PARAM_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        CreateOutPaintingTaskResponse response = pictureService.createPictureOutPaintingTask(createPictureOutPaintingTaskRequest, loginUser);
+        return ResultUtils.success(response);
+    }
+
+    /**
+     * 查询AI扩图任务
+     */
+    @GetMapping("/out_painting/get_task")
+    public BaseResponse<GetOutPaintingTaskResponse> getPictureOutPaintingTask(String taskId) {
+        ThrowUtils.throwIf(StrUtil.isBlank(taskId), ErrorCode.PARAM_ERROR);
+        GetOutPaintingTaskResponse task = aliYunAIApi.getOutPaintingTask(taskId);
+        return ResultUtils.success(task);
+    }
+
 
 //    /**
 //     * 获取所有标签和分类
