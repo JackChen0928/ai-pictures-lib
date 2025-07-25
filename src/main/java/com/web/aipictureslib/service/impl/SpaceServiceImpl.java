@@ -219,6 +219,14 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
         queryWrapper.orderBy(StrUtil.isNotBlank(sortField), sortOrder.equals("ascend"), sortField);
         return queryWrapper;
     }
+
+    @Override
+    public void checkSpaceAuth(User loginUser, Space space) {
+        //仅本人或管理员可访问
+        if (!loginUser.getId().equals(space.getUserId()) && !userService.isAdmin(loginUser)) {
+            throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
+        }
+    }
 }
 
 

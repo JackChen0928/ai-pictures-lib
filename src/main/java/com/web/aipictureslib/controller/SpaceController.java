@@ -62,9 +62,7 @@ public class SpaceController {
         Space oldspace = spaceService.getById(id);
         ThrowUtils.throwIf(oldspace == null, ErrorCode.NOT_FOUND_ERROR);
         //如果不是管理员或者不是本人的空间，不能删
-        if (!userService.isAdmin(loginUser) && !loginUser.getId().equals(oldspace.getUserId())){
-        ThrowUtils.throwIf(!userService.isAdmin(loginUser), ErrorCode.NOT_AUTH_ERROR);
-        }
+        spaceService.checkSpaceAuth(loginUser, oldspace);
         boolean result = spaceService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
@@ -115,9 +113,7 @@ public class SpaceController {
         ThrowUtils.throwIf(oldSpace == null, ErrorCode.NOT_FOUND_ERROR);
         //仅本人或管理员可以编辑
         User loginUser = userService.getLoginUser(request);
-        if (!oldSpace.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
-        }
+        spaceService.checkSpaceAuth(loginUser, oldSpace);
         //存在该照片，把之前存起来的新的数据存进去数据库
         boolean result = spaceService.updateById(space);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
