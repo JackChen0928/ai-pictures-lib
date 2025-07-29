@@ -59,6 +59,12 @@ public class Space implements Serializable {
     private Long userId;
 
     /**
+     * 空间类型：0-私有 1-团队
+     */
+    private Integer spaceType;
+
+
+    /**
      * 创建时间
      */
     private Date createTime;

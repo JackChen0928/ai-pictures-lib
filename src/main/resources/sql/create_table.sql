@@ -86,3 +86,22 @@ ALTER TABLE picture
 -- 创建索引
 CREATE INDEX idx_spaceId ON picture (spaceId);
 
+-- 添加新列
+alter table space
+    add column spaceType int default 0 not null comment '空间类型：0-个人空间 1-团队空间';
+-- 创建索引
+create index idx_spaceType on space (spaceType);
+
+create table if not exists space_user
+(
+    id         bigint auto_increment comment 'id' primary key,
+    spaceId    bigint                                 not null comment '空间 id',
+    userId     bigint                                 not null comment '用户 id',
+    spaceRole  varchar(128) default 'viewer'          not null comment '用户角色：view/editor/admin',
+    createTime datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    -- 索引设计
+    unique key uk_spaceId_userId (spaceId, userId),-- 空间 id 和用户 id 组合唯一
+    index idx_spaceId (spaceId),                   -- 提升基于空间 id 的查询效率
+    index idx_userId (userId)-- 提升基于用户 id 的查询效率
+) comment '空间用户关系表' collate = utf8mb4_unicode_ci;
