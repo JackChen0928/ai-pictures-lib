@@ -47,9 +47,6 @@ public class SpaceAnalyzeServiceImpl extends ServiceImpl<SpaceMapper, Space> imp
     @Resource
     private PictureService pictureService;
 
-    @Resource
-    private SpaceAnalyzeService spaceAnalyzeService;
-
     private void checkSpaceAnalyzeAuth(SpaceAnalyzeRequest spaceAnalyzeRequest, User loginUser) {
         //检查权限
         //1.分析需要查询全部空间或者公共图库，只允许管理员分析

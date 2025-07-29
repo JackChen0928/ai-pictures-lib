@@ -51,8 +51,6 @@ public class SpaceServiceImpl extends ServiceImpl<SpaceMapper, Space> implements
     private SpaceUserService spaceUserService;
     @Autowired
     private TransactionTemplate transactionTemplate;
-    @Autowired
-    private SpaceUserServiceImpl spaceUserServiceImpl;
 
 
     @Override
