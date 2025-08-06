@@ -204,7 +204,7 @@ public class PictureController {
         }
         // 获取权限列表
         User loginUser = userService.getLoginUser(request);
-        List<String> permissionList = SpaceUserAuthManager.getPermissionList(space, loginUser);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
         PictureVO pictureVO = pictureService.getPictureVO(picture);
         pictureVO.setPermissionList(permissionList);
         // 获取封装类
