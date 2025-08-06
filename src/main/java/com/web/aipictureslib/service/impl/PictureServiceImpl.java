@@ -101,7 +101,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             Space space = spaceService.getById(spaceId);
             ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
             //仅本人或管理员可操作
-            ThrowUtils.throwIf(!space.getUserId().equals(loginUser.getId()), ErrorCode.NOT_AUTH_ERROR, "您没有权限操作该空间");
+//            ThrowUtils.throwIf(!space.getUserId().equals(loginUser.getId()), ErrorCode.NOT_AUTH_ERROR, "您没有权限操作该空间");
             //校验空间是否还有剩余空间条数
             ThrowUtils.throwIf(space.getTotalCount() >= space.getMaxCount(), ErrorCode.OPERATION_ERROR, "空间条数不足");
             //校验空间是否还有剩余空间大小
@@ -120,9 +120,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
             Picture oldpicture = this.getById(pictureId);
             ThrowUtils.throwIf(oldpicture == null, ErrorCode.NOT_FOUND_ERROR);
             //仅本人或管理员可编辑
-            if (!oldpicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-                throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
-            }
+//            if (!oldpicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+//                throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
+//            }
             //校验空间是否一致
             //没传spaceId,复用原来的spaceId
             if (spaceId == null) {
@@ -487,21 +487,21 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         }
     }
 
-    @Override
-    public void checkPictureAuth(User loginUser, Picture picture) {
-        Long spaceId = picture.getSpaceId();
-        if (spaceId == null) {
-            // 公共图库，仅本人或管理员可操作
-            if (!picture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-                throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
-            }
-        } else {
-            // 私有空间，仅空间管理员可操作
-            if (!picture.getUserId().equals(loginUser.getId())) {
-                throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
-            }
-        }
-    }
+//    @Override
+//    public void checkPictureAuth(User loginUser, Picture picture) {
+//        Long spaceId = picture.getSpaceId();
+//        if (spaceId == null) {
+//            // 公共图库，仅本人或管理员可操作
+//            if (!picture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
+//                throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
+//            }
+//        } else {
+//            // 私有空间，仅空间管理员可操作
+//            if (!picture.getUserId().equals(loginUser.getId())) {
+//                throw new BusinessException(ErrorCode.NOT_AUTH_ERROR);
+//            }
+//        }
+//    }
 
     @Override
     public void deletePicture(long pictureId, User loginUser) {
@@ -511,7 +511,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         Picture oldPicture = this.getById(pictureId);
         ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
         // 校验权限
-        checkPictureAuth(loginUser, oldPicture);
+//        checkPictureAuth(loginUser, oldPicture);
         // 操作数据库
         boolean result = this.removeById(pictureId);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -541,7 +541,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
 //        }
         User loginUser = userService.getLoginUser(request);
         //校验权限
-        checkPictureAuth(loginUser, oldPicture);
+//        checkPictureAuth(loginUser, oldPicture);
         //填充审核参数
         this.fillReviewParams(picture, loginUser);
         //存在该照片，把之前存起来的新的数据存进去数据库
@@ -556,7 +556,7 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture> impl
         Picture picture = this.getById(pictureId);
         ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
         //校验权限
-        checkPictureAuth(loginUser, picture);
+//        checkPictureAuth(loginUser, picture);
         //新建一个创建ai扩图任务请求，然后把请求参数填满（填Input和Parameters）
         CreateOutPaintingTaskRequest taskRequest = new CreateOutPaintingTaskRequest();
         //补充Input

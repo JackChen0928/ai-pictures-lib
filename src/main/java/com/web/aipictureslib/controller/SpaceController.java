@@ -9,6 +9,7 @@ import com.web.aipictureslib.constant.UserConstant;
 import com.web.aipictureslib.exception.BusinessException;
 import com.web.aipictureslib.exception.ErrorCode;
 import com.web.aipictureslib.exception.ThrowUtils;
+import com.web.aipictureslib.manager.auth.SpaceUserAuthManager;
 import com.web.aipictureslib.model.dto.space.SpaceLevel;
 import com.web.aipictureslib.model.VO.SpaceVO;
 import com.web.aipictureslib.model.dto.space.*;
@@ -37,6 +38,8 @@ public class SpaceController {
     private UserService userService;
     @Autowired
     private HttpServletRequest request;
+    @Resource
+    private SpaceUserAuthManager spaceUserAuthManager;
 
     @PostMapping("/add")
     public BaseResponse<Long> addSpace(@RequestBody SpaceAddRequest spaceAddRequest) {
@@ -140,13 +143,19 @@ public class SpaceController {
      * @return
      */
     @GetMapping("/get/vo")
-    public BaseResponse<SpaceVO> getSpaceVOById(Long id) {
+    public BaseResponse<SpaceVO> getSpaceVOById(long id) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAM_ERROR);
+        // 查询数据库
         Space space = spaceService.getById(id);
         ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR);
-        // 脱敏
-        return ResultUtils.success(spaceService.getSpaceVO(space));
+        SpaceVO spaceVO = spaceService.getSpaceVO(space);
+        User loginUser = userService.getLoginUser(request);
+        List<String> permissionList = spaceUserAuthManager.getPermissionList(space, loginUser);
+        spaceVO.setPermissionList(permissionList);
+        // 获取封装类
+        return ResultUtils.success(spaceVO);
     }
+
 
     /**
      * 分页获取空间列表（仅管理员）

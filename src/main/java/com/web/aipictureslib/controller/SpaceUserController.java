@@ -7,6 +7,8 @@ import com.web.aipictureslib.common.DeleteRequest;
 import com.web.aipictureslib.common.ResultUtils;
 import com.web.aipictureslib.exception.ErrorCode;
 import com.web.aipictureslib.exception.ThrowUtils;
+import com.web.aipictureslib.manager.auth.annotation.SaSpaceCheckPermission;
+import com.web.aipictureslib.manager.auth.model.SpaceUserPermissionConstant;
 import com.web.aipictureslib.model.VO.SpaceUserVO;
 import com.web.aipictureslib.model.VO.SpaceVO;
 import com.web.aipictureslib.model.dto.spaceuser.SpaceUserAddRequest;
@@ -48,6 +50,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/add")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Long> add(@RequestBody SpaceUserAddRequest spaceUserAddRequest) {
         Long id = spaceUserService.addSpaceUser(spaceUserAddRequest);
         return ResultUtils.success(id);
@@ -60,6 +63,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/delete")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Boolean> delete(@RequestBody DeleteRequest deleteRequest) {
         ThrowUtils.throwIf(deleteRequest.getId() <= 0 || ObjUtil.isEmpty(deleteRequest), ErrorCode.PARAM_ERROR);
         //确认用户确实存在
@@ -80,6 +84,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/get")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<SpaceUser> getSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest) {
         ThrowUtils.throwIf(ObjUtil.isNull(spaceUserQueryRequest), ErrorCode.PARAM_ERROR);
         Long userId = spaceUserQueryRequest.getId();
@@ -98,6 +103,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/list")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<List<SpaceUserVO>> listSpaceUser(@RequestBody SpaceUserQueryRequest spaceUserQueryRequest) {
         ThrowUtils.throwIf(ObjUtil.isNull(spaceUserQueryRequest), ErrorCode.PARAM_ERROR);
         //先拿到未脱敏列表
@@ -115,6 +121,7 @@ public class SpaceUserController {
      * @return
      */
     @PostMapping("/edit")
+    @SaSpaceCheckPermission(value = SpaceUserPermissionConstant.SPACE_USER_MANAGE)
     public BaseResponse<Boolean> editSpaceUser(@RequestBody SpaceUserEditRequest spaceUserEditRequest) {
         ThrowUtils.throwIf(ObjUtil.isNull(spaceUserEditRequest) || spaceUserEditRequest.getId() < 0, ErrorCode.PARAM_ERROR);
         //判断是否存在该用户
