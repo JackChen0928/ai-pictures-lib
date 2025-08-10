@@ -193,7 +193,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.web.aipictureslib.AiPicturesLibApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
