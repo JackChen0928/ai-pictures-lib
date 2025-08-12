@@ -1,12 +1,8 @@
 package com.web.aipictureslib.manager.websocket.interceptor;
 
 import cn.hutool.core.util.ObjUtil;
-import cn.hutool.http.server.HttpServerRequest;
 import com.web.aipictureslib.manager.auth.SpaceUserAuthManager;
 import com.web.aipictureslib.manager.auth.model.SpaceUserPermissionConstant;
-import com.web.aipictureslib.manager.websocket.model.PictureEditActionEnum;
-import com.web.aipictureslib.manager.websocket.model.PictureEditMessageTypeEnum;
-import com.web.aipictureslib.manager.websocket.model.PictureEditRequestMessage;
 import com.web.aipictureslib.model.entity.Picture;
 import com.web.aipictureslib.model.entity.Space;
 import com.web.aipictureslib.model.entity.User;

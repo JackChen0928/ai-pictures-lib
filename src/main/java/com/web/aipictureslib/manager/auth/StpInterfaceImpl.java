@@ -12,7 +12,6 @@ import cn.hutool.http.Header;
 import cn.hutool.json.JSONUtil;
 import com.web.aipictureslib.exception.BusinessException;
 import com.web.aipictureslib.exception.ErrorCode;
-import com.web.aipictureslib.manager.auth.model.SpaceUserAuthContext;
 import com.web.aipictureslib.manager.auth.model.SpaceUserPermissionConstant;
 import com.web.aipictureslib.model.entity.Picture;
 import com.web.aipictureslib.model.entity.Space;
@@ -41,12 +40,15 @@ import static com.web.aipictureslib.constant.UserConstant.USER_LOGIN_STATE;
 @Component    // 保证此类被 SpringBoot 扫描，完成 Sa-Token 的自定义权限验证扩展
 public class StpInterfaceImpl implements StpInterface {
 
-
+    // 默认是 /api
     @Value("${server.servlet.context-path}")
     private String contextPath;
 
     @Resource
-    private SpaceUserAuthManager spaceUserAuthManager;
+    private UserService userService;
+
+    @Resource
+    private SpaceService spaceService;
 
     @Resource
     private SpaceUserService spaceUserService;
@@ -55,12 +57,10 @@ public class StpInterfaceImpl implements StpInterface {
     private PictureService pictureService;
 
     @Resource
-    private SpaceService spaceService;
+    private SpaceUserAuthManager spaceUserAuthManager;
 
-    @Resource
-    private UserService userService;
     /**
-     * 返回一个账号所拥有的权限码集合 
+     * 返回一个账号所拥有的权限码集合
      */
     @Override
     public List<String> getPermissionList(Object loginId, String loginType) {
@@ -77,7 +77,7 @@ public class StpInterfaceImpl implements StpInterface {
             return ADMIN_PERMISSIONS;
         }
         // 获取 userId
-        User loginUser = (User) StpKit.SPACE.getSessionByLoginId(loginId).get(USER_LOGIN_STATE);
+        User loginUser = (User) StpKit.SPACE.getSession().get(USER_LOGIN_STATE);
         if (loginUser == null) {
             throw new BusinessException(ErrorCode.NOT_AUTH_ERROR, "用户未登录");
         }
@@ -158,31 +158,13 @@ public class StpInterfaceImpl implements StpInterface {
         }
     }
 
-    private boolean isAllFieldsNull(Object object) {
-        if (object == null) {
-            return true; // 对象本身为空
-        }
-        // 获取所有字段并判断是否所有字段都为空
-        return Arrays.stream(ReflectUtil.getFields(object.getClass()))
-                // 获取字段值
-                .map(field -> ReflectUtil.getFieldValue(object, field))
-                // 检查是否所有字段都为空
-                .allMatch(ObjectUtil::isEmpty);
-    }
-
-
     /**
-     * 返回一个账号所拥有的角色标识集合 (权限与角色可分开校验)
+     * 本项目中不使用。返回一个账号所拥有的角色标识集合 (权限与角色可分开校验)
      */
     @Override
     public List<String> getRoleList(Object loginId, String loginType) {
-        // 本 list 仅做模拟，实际项目中要根据具体业务逻辑来查询角色
-        List<String> list = new ArrayList<String>();    
-        list.add("admin");
-        list.add("super-admin");
-        return list;
+        return new ArrayList<>();
     }
-
 
     /**
      * 从请求中获取上下文对象
@@ -191,7 +173,7 @@ public class StpInterfaceImpl implements StpInterface {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String contentType = request.getHeader(Header.CONTENT_TYPE.getValue());
         SpaceUserAuthContext authRequest;
-        // 兼容 get 和 post 操作
+        // 获取请求参数
         if (ContentType.JSON.getValue().equals(contentType)) {
             String body = ServletUtil.getBody(request);
             authRequest = JSONUtil.toBean(body, SpaceUserAuthContext.class);
@@ -202,9 +184,12 @@ public class StpInterfaceImpl implements StpInterface {
         // 根据请求路径区分 id 字段的含义
         Long id = authRequest.getId();
         if (ObjUtil.isNotNull(id)) {
-            String requestUri = request.getRequestURI();
-            String partUri = requestUri.replace(contextPath + "/", "");
-            String moduleName = StrUtil.subBefore(partUri, "/", false);
+            // 获取到请求路径的业务前缀，/api/picture/aaa?a=1
+            String requestURI = request.getRequestURI();
+            // 先替换掉上下文，剩下的就是前缀
+            String partURI = requestURI.replace(contextPath + "/", "");
+            // 获取前缀的第一个斜杠前的字符串
+            String moduleName = StrUtil.subBefore(partURI, "/", false);
             switch (moduleName) {
                 case "picture":
                     authRequest.setPictureId(id);
@@ -221,4 +206,21 @@ public class StpInterfaceImpl implements StpInterface {
         return authRequest;
     }
 
+    /**
+     * 判断对象的所有字段是否为空
+     *
+     * @param object
+     * @return
+     */
+    private boolean isAllFieldsNull(Object object) {
+        if (object == null) {
+            return true; // 对象本身为空
+        }
+        // 获取所有字段并判断是否所有字段都为空
+        return Arrays.stream(ReflectUtil.getFields(object.getClass()))
+                // 获取字段值
+                .map(field -> ReflectUtil.getFieldValue(object, field))
+                // 检查是否所有字段都为空
+                .allMatch(ObjectUtil::isEmpty);
+    }
 }

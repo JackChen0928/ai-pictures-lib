@@ -1,9 +1,11 @@
 package com.web.aipictureslib.manager.auth;
 
 import cn.hutool.core.io.resource.ResourceUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.web.aipictureslib.manager.auth.model.SpaceUserAuthConfig;
-import com.web.aipictureslib.manager.auth.model.SpaceUserRoles;
+import com.web.aipictureslib.manager.auth.model.SpaceUserPermissionConstant;
+import com.web.aipictureslib.manager.auth.model.SpaceUserRole;
 import com.web.aipictureslib.model.entity.Space;
 import com.web.aipictureslib.model.entity.SpaceUser;
 import com.web.aipictureslib.model.entity.User;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -38,19 +41,27 @@ public class SpaceUserAuthManager {
      * 根据角色获取权限列表
      */
     public List<String> getPermissionsByRole(String spaceUserRole) {
-       if (spaceUserRole == null) return new ArrayList<>();
-
-        SpaceUserRoles Role = SPACE_USER_AUTH_CONFIG.getRoles().stream()
-                .filter(role -> role.getKey().equals(spaceUserRole))
+        if (StrUtil.isBlank(spaceUserRole)) {
+            return new ArrayList<>();
+        }
+        SpaceUserRole role = SPACE_USER_AUTH_CONFIG.getRoles()
+                .stream()
+                .filter(r -> r.getKey().equals(spaceUserRole))
                 .findFirst()
                 .orElse(null);
-
-        if (Role == null)
+        if (role == null) {
             return new ArrayList<>();
-
-        return Role.getPermissions();
+        }
+        return role.getPermissions();
     }
 
+    /**
+     * 获取权限列表
+     *
+     * @param space
+     * @param loginUser
+     * @return
+     */
     public List<String> getPermissionList(Space space, User loginUser) {
         if (loginUser == null) {
             return new ArrayList<>();
@@ -62,7 +73,7 @@ public class SpaceUserAuthManager {
             if (userService.isAdmin(loginUser)) {
                 return ADMIN_PERMISSIONS;
             }
-            return new ArrayList<>();
+            return Collections.singletonList(SpaceUserPermissionConstant.PICTURE_VIEW);
         }
         SpaceTypeEnum spaceTypeEnum = SpaceTypeEnum.getEnumByValue(space.getSpaceType());
         if (spaceTypeEnum == null) {
@@ -91,6 +102,4 @@ public class SpaceUserAuthManager {
         }
         return new ArrayList<>();
     }
-
-
 }

@@ -109,13 +109,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //根据查询条件select一个用户
         User user = baseMapper.selectOne(queryWrapper);
         if (user == null) throw new BusinessException(ErrorCode.PARAM_ERROR, "用户不存在");
-        //拿到请求，获取session，将user存入session
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
+
 
         //4.记录用户登录态到Sa-Token 便于空间鉴权时使用，注意保证该用户信息与SpringSession中的用户过期信息一致
         StpKit.SPACE.login(user.getId());
         StpKit.SPACE.getSession().set(USER_LOGIN_STATE, user);
+        StpKit.SPACE.getSessionByLoginId(user.getId()).set(USER_LOGIN_STATE, user);
+        User loginUser = (User) StpKit.SPACE.getSessionByLoginId(user.getId()).get(USER_LOGIN_STATE);
+        System.out.println(loginUser);
 
+        //拿到请求，获取session，将user存入session
+        request.getSession().setAttribute(USER_LOGIN_STATE, user);
         return this.getLoginUserVO(user);
     }
 

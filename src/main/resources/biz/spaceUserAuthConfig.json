@@ -1,5 +1,5 @@
 {
-   "permissons": [
+   "permissions": [
      {
        "key": "spaceUser:manage",
        "name":"成员管理",
@@ -35,7 +35,7 @@
     {
       "key": "viewer",
       "name": "浏览者",
-      "permissons": [
+      "permissions": [
         "picture:view"
       ],
       "description": "查看图片"
@@ -43,7 +43,7 @@
     {
       "key": "editor",
       "name": "编辑者",
-      "permissons": [
+      "permissions": [
         "picture:view",
         "picture:upload",
         "picture:edit",
@@ -54,7 +54,7 @@
     {
       "key": "admin",
       "name": "管理员",
-      "permissons": [
+      "permissions": [
         "spaceUser:manage",
         "picture:view",
         "picture:upload",

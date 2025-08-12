@@ -15,6 +15,6 @@ public class SpaceUserAuthConfig implements Serializable {
      */
     private List<SpaceUserPermission> permissions;
 
-    private List<SpaceUserRoles> roles;
+    private List<SpaceUserRole> roles;
 
 }

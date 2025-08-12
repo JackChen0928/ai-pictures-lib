@@ -14,7 +14,6 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id
-        ,spaceId,userId,spaceRole,createTime,updateTime
+        id,spaceId,userId,spaceRole,createTime,updateTime
     </sql>
 </mapper>

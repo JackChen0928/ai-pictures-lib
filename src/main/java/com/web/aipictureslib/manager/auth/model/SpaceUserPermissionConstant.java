@@ -17,12 +17,12 @@ public interface SpaceUserPermissionConstant {
     String PICTURE_UPLOAD = "picture:upload";
 
     /**
-     * 图片删除权限
-     */
-    String PICTURE_DELETE = "picture:delete";
-
-    /**
      * 图片编辑权限
      */
     String PICTURE_EDIT = "picture:edit";
+
+    /**
+     * 图片删除权限
+     */
+    String PICTURE_DELETE = "picture:delete";
 }

@@ -1,6 +1,5 @@
 package com.web.aipictureslib.controller;
 
-import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -17,7 +16,6 @@ import com.web.aipictureslib.common.BaseResponse;
 import com.web.aipictureslib.common.DeleteRequest;
 import com.web.aipictureslib.common.ResultUtils;
 import com.web.aipictureslib.constant.UserConstant;
-import com.web.aipictureslib.exception.BusinessException;
 import com.web.aipictureslib.exception.ErrorCode;
 import com.web.aipictureslib.exception.ThrowUtils;
 import com.web.aipictureslib.manager.FileManager;
@@ -26,9 +24,7 @@ import com.web.aipictureslib.manager.auth.StpKit;
 import com.web.aipictureslib.manager.auth.annotation.SaSpaceCheckPermission;
 import com.web.aipictureslib.manager.auth.model.SpaceUserPermissionConstant;
 import com.web.aipictureslib.model.VO.PictureVO;
-import com.web.aipictureslib.model.dto.file.UploadPictureResult;
 import com.web.aipictureslib.model.dto.picture.*;
-import com.web.aipictureslib.model.dto.space.SpaceUpdateRequest;
 import com.web.aipictureslib.model.entity.Picture;
 import com.web.aipictureslib.model.entity.Space;
 import com.web.aipictureslib.model.entity.User;
@@ -36,8 +32,6 @@ import com.web.aipictureslib.model.enums.PictureReviewStatusEnum;
 import com.web.aipictureslib.service.PictureService;
 import com.web.aipictureslib.service.SpaceService;
 import com.web.aipictureslib.service.UserService;
-import org.apache.commons.codec.cli.Digest;
-import org.apache.coyote.Request;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -49,11 +43,9 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import java.util.Date;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.web.aipictureslib.constant.UserConstant.USER_LOGIN_STATE;
 
 @RestController
 @RequestMapping("/picture")
@@ -250,8 +242,8 @@ public class PictureController {
 //            if (!space.getUserId().equals(loginUser.getId())){
 //                throw new BusinessException(ErrorCode.NOT_AUTH_ERROR,"您没有权限查看该空间");
 //            }
-                boolean hasPermisson = StpKit.SPACE.hasPermission(spaceId, SpaceUserPermissionConstant.PICTURE_VIEW);
-                ThrowUtils.throwIf(!hasPermisson, ErrorCode.NOT_AUTH_ERROR);
+                boolean hasPermission = StpKit.SPACE.hasPermission(spaceId, SpaceUserPermissionConstant.PICTURE_VIEW);
+                ThrowUtils.throwIf(!hasPermission, ErrorCode.NOT_AUTH_ERROR);
 
         }
         //先查询数据库获得不脱敏的数据页
@@ -457,19 +449,19 @@ public class PictureController {
     }
 
 
-//    /**
-//     * 获取所有标签和分类
-//     *
-//     * @return
-//     */
-//    @GetMapping("/tag_category")
-//    public BaseResponse<PictureTagCategory> listPictureTagCategory() {
-//        PictureTagCategory pictureTagCategory = new PictureTagCategory();
-//        List<String> tagList = Arrays.asList("热门", "搞笑", "生活", "高清", "艺术", "校园", "背景", "简历", "创意");
-//        List<String> categoryList = Arrays.asList("模板", "电商", "表情包", "素材", "海报");
-//        pictureTagCategory.setTagList(tagList);
-//        pictureTagCategory.setCategoryList(categoryList);
-//        return ResultUtils.success(pictureTagCategory);
-//    }
+    /**
+     * 获取所有标签和分类
+     *
+     * @return
+     */
+    @GetMapping("/tag_category")
+    public BaseResponse<PictureTagCategory> listPictureTagCategory() {
+        PictureTagCategory pictureTagCategory = new PictureTagCategory();
+        List<String> tagList = Arrays.asList("热门", "搞笑", "生活", "高清", "艺术", "校园", "背景", "简历", "创意");
+        List<String> categoryList = Arrays.asList("模板", "电商", "表情包", "素材", "海报");
+        pictureTagCategory.setTagList(tagList);
+        pictureTagCategory.setCategoryList(categoryList);
+        return ResultUtils.success(pictureTagCategory);
+    }
 
 }

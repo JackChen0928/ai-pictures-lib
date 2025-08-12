@@ -1,7 +1,6 @@
 package com.web.aipictureslib.controller;
 
 import cn.hutool.core.util.ObjUtil;
-import cn.hutool.http.HttpRequest;
 import com.web.aipictureslib.common.BaseResponse;
 import com.web.aipictureslib.common.DeleteRequest;
 import com.web.aipictureslib.common.ResultUtils;
@@ -10,7 +9,6 @@ import com.web.aipictureslib.exception.ThrowUtils;
 import com.web.aipictureslib.manager.auth.annotation.SaSpaceCheckPermission;
 import com.web.aipictureslib.manager.auth.model.SpaceUserPermissionConstant;
 import com.web.aipictureslib.model.VO.SpaceUserVO;
-import com.web.aipictureslib.model.VO.SpaceVO;
 import com.web.aipictureslib.model.dto.spaceuser.SpaceUserAddRequest;
 import com.web.aipictureslib.model.dto.spaceuser.SpaceUserEditRequest;
 import com.web.aipictureslib.model.dto.spaceuser.SpaceUserQueryRequest;
@@ -28,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.prefs.BackingStoreException;
 
 @RestController
 @RequestMapping("/spaceUser")

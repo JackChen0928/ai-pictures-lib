@@ -20,8 +20,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id
-        ,spaceName,spaceLevel,maxSize,maxCount,totalSize,
+        id,spaceName,spaceLevel,spaceType,maxSize,maxCount,totalSize,
         totalCount,userId,createTime,editTime,updateTime,
         isDelete
     </sql>

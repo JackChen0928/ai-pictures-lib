@@ -1,4 +1,4 @@
-package com.web.aipictureslib.manager.auth.model;
+package com.web.aipictureslib.manager.auth;
 
 import com.web.aipictureslib.model.entity.Picture;
 import com.web.aipictureslib.model.entity.Space;
